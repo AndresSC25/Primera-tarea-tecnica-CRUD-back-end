@@ -16,7 +16,7 @@ public class Product {
 
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "category_id", referencedColumnName = "id", nullable = true)
     private Category category;
 
     // Constructors

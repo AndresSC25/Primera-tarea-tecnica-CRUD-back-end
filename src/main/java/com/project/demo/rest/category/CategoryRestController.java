@@ -3,8 +3,13 @@ package com.project.demo.rest.category;
 import com.project.demo.logic.entity.category.Category;
 import com.project.demo.logic.entity.category.CategoryRepository;
 import com.project.demo.logic.entity.http.GlobalResponseHandler;
+import com.project.demo.logic.entity.http.Meta;
+import com.project.demo.logic.entity.product.Product;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,8 +27,21 @@ public class CategoryRestController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'USER')")
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public ResponseEntity<?> getAllCategories(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+        Meta meta = new Meta(request.getMethod(), request.getRequestURL().toString());
+        meta.setTotalPages(categoryPage.getTotalPages());
+        meta.setTotalElements(categoryPage.getTotalElements());
+        meta.setPageNumber(categoryPage.getNumber() + 1);
+        meta.setPageSize(categoryPage.getSize());
+
+        return new GlobalResponseHandler().handleResponse("Categories retrieved successfully",
+                categoryPage.getContent(), HttpStatus.OK, meta);
     }
 
     @PutMapping("/{id}")
